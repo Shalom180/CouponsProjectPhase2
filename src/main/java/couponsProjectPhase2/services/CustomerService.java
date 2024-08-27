@@ -1,9 +1,13 @@
 package couponsProjectPhase2.services;
 
-import beans.Category;
-import beans.Coupon;
-import beans.Customer;
+import couponsProjectPhase2.beans.Company;
+import couponsProjectPhase2.beans.Coupon;
+import couponsProjectPhase2.beans.Customer;
 import couponsProjectPhase2.exceptions.*;
+import couponsProjectPhase2.repositories.CategoriesRepository;
+import couponsProjectPhase2.repositories.CompaniesRepository;
+import couponsProjectPhase2.repositories.CouponsRepository;
+import couponsProjectPhase2.repositories.CustomersRepository;
 import org.springframework.stereotype.Service;
 
 import java.sql.SQLException;
@@ -11,28 +15,24 @@ import java.util.ArrayList;
 import java.util.Date;
 
 @Service
-public class CustomerService extends ClientFacade {
+public class CustomerService extends ClientService {
     private int customerID;
 
     //ctor
-    public CustomerService() throws SQLException {
+    public CustomerService(CompaniesRepository companiesRepository, CouponsRepository couponsRepository, CustomersRepository customersRepository, CategoriesRepository categoriesRepository, int customerID) {
+        super(companiesRepository, couponsRepository, customersRepository, categoriesRepository);
     }
 
     //methods
     @Override
-    public boolean login(String email, String password) throws EmptyValueException, NonPositiveValueException,
-            EmailFormatException, NegativeValueException, PasswordFormatException, NameException, SQLException,
-            DateException {
-
-        if (customersDAO.isCustomerExists(email, password)) {
-            for (Customer existing : customersDAO.getAllCustomers()) {
-                if (existing.getEmail().equals(email) && existing.getPassword().equals(password)) {
-                    this.customerID = existing.getId();
-                    return true;
-                }
-            }
+    public boolean login(String email, String password) {
+        Customer customer = customersRepository.findByEmailAndPassword(email, password).orElse(null);
+        if (customer == null)
+            return false;
+        else {
+            customerID = customer.getId();
+            return true;
         }
-        return false;
     }
 
     public void purchaseCoupon(Coupon coupon) throws NonPositiveValueException, EmailFormatException,
@@ -43,14 +43,7 @@ public class CustomerService extends ClientFacade {
             throw new EmptyValueException();
 
         //we cannot purchase a nonexistant coupon
-        boolean existingAlready = false;
-        for (Coupon existing : couponsDAO.getAllCoupons()) {
-            if (existing.getId() == coupon.getId()) {
-                existingAlready = true;
-                break;
-            }
-        }
-        if (!existingAlready)
+        if (!couponsRepository.existsById(coupon.getId()))
             throw new NonexistantObjectException();
 
         //one customer cannot purchase a coupon more that once

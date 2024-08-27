@@ -19,6 +19,7 @@ public class Coupon {
     @ManyToOne
     @Column(nullable = false)
     private Company company;
+    @ManyToOne
     @Column(nullable = false)
     private Category category;
     @Column(nullable = false)

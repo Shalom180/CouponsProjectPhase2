@@ -1,14 +1,5 @@
 package couponsProjectPhase2.factories;
 
-import beans.Company;
-import beans.Coupon;
-import beans.Customer;
-import dao.CompaniesDBDAO;
-import dao.CouponsDBDAO;
-import dao.CustomersDBDAO;
-import db.ConnectionPool;
-import exceptions.*;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;

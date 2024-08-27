@@ -4,6 +4,7 @@ import couponsProjectPhase2.beans.Category;
 import couponsProjectPhase2.beans.Company;
 import couponsProjectPhase2.beans.Coupon;
 import couponsProjectPhase2.exceptions.*;
+import couponsProjectPhase2.repositories.CategoriesRepository;
 import couponsProjectPhase2.repositories.CompaniesRepository;
 import couponsProjectPhase2.repositories.CouponsRepository;
 import couponsProjectPhase2.repositories.CustomersRepository;
@@ -11,14 +12,17 @@ import org.springframework.stereotype.Service;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class CompanyService extends ClientService {
     private int companyID;
 
     //ctor
-    public CompanyService(CompaniesRepository companiesRepository, CouponsRepository couponsRepository, CustomersRepository customersRepository, int companyID) {
-        super(companiesRepository, couponsRepository, customersRepository);
+
+
+    public CompanyService(CompaniesRepository companiesRepository, CouponsRepository couponsRepository, CustomersRepository customersRepository, CategoriesRepository categoriesRepository, int companyID) {
+        super(companiesRepository, couponsRepository, customersRepository, categoriesRepository);
     }
 
     //methods
@@ -33,109 +37,105 @@ public class CompanyService extends ClientService {
         }
     }
 
-    public void addCoupon(Coupon coupon) throws NonPositiveValueException, EmailFormatException,
-            NegativeValueException, PasswordFormatException, SQLException, DateException, EmptyValueException,
-            AlreadyExistingValueException, CompanyIdException {
+    public void addCoupon(Coupon coupon) throws NegativeValueException, DateException, EmptyValueException,
+            AlreadyExistingValueException, CompanyIdException, UnallowedUpdateException, NonexistantObjectException {
         //checking for empty values
-        if (coupon == null)
+        if (coupon == null || coupon.getTitle() == null || coupon.getTitle().isEmpty() || coupon.getCompany() == null ||
+                coupon.getDescription() == null || coupon.getDescription().isEmpty() || coupon.getCategory() == null)
             throw new EmptyValueException();
 
-        if (coupon.getTitle() == null || coupon.getTitle().isEmpty() || coupon.getCompany() == null ||
-                coupon.getCategory() == null)
-            throw new EmptyValueException();
+        //we can't add a coupon with an id other than 0 because it is auto-generated and not picked by the user
+        if (coupon.getId() != 0)
+            throw new UnallowedUpdateException();
 
-        if (!cate)
-
-        if (coupon.getAmount() < 0)
+        if (coupon.getAmount() < 0 || coupon.getPrice() < 0)
             throw new NegativeValueException();
 
         if (coupon.getStartDate().after(coupon.getEndDate()))
             throw new DateException();
 
+        //we cannot add a coupon with a company id not matching the company adding it, that way we also check if that
+        // company actually exists
+        if (coupon.getCompany().getId() != companyID)
+            throw new CompanyIdException();
+
+        //we'll check if the coupons category actually exists
+        if (!categoriesRepository.existsById(coupon.getCategory().getId()))
+            throw new NonexistantObjectException();
+
         //we cannot add a coupon with a name matching an existing coupon from the same company
-        for (Coupon existing : companiesDAO.getOneCompany(companyID).getCoupons()) {
+        for (Coupon existing : couponsRepository.findAllByCompanyId(companyID)) {
             if (coupon.getTitle().equals(existing.getTitle()))
                 throw new AlreadyExistingValueException();
         }
-        //we cannot add a coupon with a company id not matching the company adding it
-        if (coupon.getCompanyId() != companyID)
-            throw new CompanyIdException();
 
-        couponsDAO.addCoupon(coupon);
+
+        couponsRepository.save(coupon);
     }
 
-    public void updateCoupon(Coupon coupon) throws UnallowedUpdateException, SQLException, EmptyValueException,
-            NonPositiveValueException, NegativeValueException, DateException, AlreadyExistingValueException,
+    public void updateCoupon(Coupon coupon) throws UnallowedUpdateException, EmptyValueException, NegativeValueException, DateException, AlreadyExistingValueException,
             NonexistantObjectException {
-        if (coupon == null)
+        //checking for empty values
+        if (coupon == null || coupon.getTitle() == null || coupon.getTitle().isEmpty() || coupon.getCompany() == null ||
+                coupon.getDescription() == null || coupon.getDescription().isEmpty() || coupon.getCategory() == null)
             throw new EmptyValueException();
+
         //we cannot update coupon id or company id
-        if (coupon.getCompanyId() != companyID)
+        if (coupon.getCompany().getId() != companyID)
             throw new UnallowedUpdateException();
-        //we cannot delete a nonexistant coupon
-        if (couponsDAO.getOneCoupon(coupon.getId()) == null)
+
+        //we cannot update a nonexistant coupon
+        if (!couponsRepository.existsById(coupon.getId()))
             throw new NonexistantObjectException();
-        //we cannot update a coupon to a title that already exists among this company's coupons
-        // we'll check first if the user is actually trying to change the coupon's title and then well look
-        // for matching values
-        if (!coupon.getTitle().equals(couponsDAO.getOneCoupon(coupon.getId()).getTitle())) {
-            for (Coupon inDB : couponsDAO.getAllCouponsByCompany(companyID)) {
-                if (inDB.getTitle().equals(coupon.getTitle()))
-                    throw new AlreadyExistingValueException();
-            }
+
+        if (coupon.getAmount() < 0 || coupon.getPrice() < 0)
+            throw new NegativeValueException();
+
+        if (coupon.getStartDate().after(coupon.getEndDate()))
+            throw new DateException();
+
+        ///we cannot add a coupon with a name matching an existing coupon from the same company
+        for (Coupon existing : couponsRepository.findAllByCompanyId(companyID)) {
+            if (coupon.getTitle().equals(existing.getTitle()))
+                throw new AlreadyExistingValueException();
         }
-        couponsDAO.updateCoupon(coupon);
+
+        couponsRepository.save(coupon);
     }
 
-    public void deleteCoupon(int couponID) throws SQLException, CompanyIdException, NonPositiveValueException,
+    public void deleteCoupon(int couponId) throws SQLException, CompanyIdException, NonPositiveValueException,
             NegativeValueException, DateException, EmptyValueException, NonexistantObjectException {
         //we cannot delete a nonexistent coupon
-        if (couponsDAO.getOneCoupon(couponID) == null)
-            throw new NonexistantObjectException();
+        Coupon coupon = couponsRepository.findById(couponId).orElseThrow(NonexistantObjectException::new);
 
         //we cannot delete a coupon not belonging to the company
-        if (couponsDAO.getOneCoupon(couponID).getCompanyId() != companyID)
+        if (coupon.getCompany().getId() != companyID)
             throw new CompanyIdException();
 
         //we also have to delete the coupons purchase history
-        couponsDAO.deleteCouponsPurchaseHistory(couponID);
-        couponsDAO.deleteCoupon(couponID);
+        couponsRepository.deleteCouponsPurchaseHistory(couponId);
+
+        couponsRepository.deleteById(couponId);
     }
 
     //returns all the company's coupons
-    public ArrayList<Coupon> getCompanyCoupons() throws NonPositiveValueException, NegativeValueException, SQLException,
+    public List<Coupon> getCompanyCoupons() throws NonPositiveValueException, NegativeValueException, SQLException,
             DateException, EmptyValueException {
-        return couponsDAO.getAllCouponsByCompany(companyID);
+        return couponsRepository.findAllByCompanyId(companyID);
     }
 
     //returns all the company's coupons in a certain category
-    public ArrayList<Coupon> getCompanyCoupons(Category category) throws NonPositiveValueException, NegativeValueException,
-            SQLException, DateException, EmptyValueException {
-        //i can also implement it using a dao method that sends a specific query to the db
-        // a list that contains only the coupons in a certain category - what we eventually return
-        ArrayList<Coupon> inCategoryList = new ArrayList<>();
-        for (Coupon c : couponsDAO.getAllCouponsByCompany(companyID)) {
-            if (c.getCategory().equals(category))
-                inCategoryList.add(c);
-        }
-        return inCategoryList;
+    public List<Coupon> getCompanyCoupons(Category category) {
+        return couponsRepository.findAllByCompanyAndCategory(companiesRepository.findById(companyID).get(), category);
     }
 
     //returns all the company's coupons below a certain price
-    public ArrayList<Coupon> getCompanyCoupons(double maxPrice) throws NonPositiveValueException, NegativeValueException,
-            SQLException, DateException, EmptyValueException {
-        //i can also implement it using a dao method that sends a specific query to the db
-        ArrayList<Coupon> belowMaxList = new ArrayList<>();
-        for (Coupon c : couponsDAO.getAllCouponsByCompany(companyID)) {
-            if (c.getPrice() <= maxPrice)
-                belowMaxList.add(c);
-        }
-        return belowMaxList;
+    public List<Coupon> getCompanyCoupons(double maxPrice) {
+        return couponsRepository.findAllByCompanyAndPriceBelow(maxPrice);
     }
 
-    public Company getCompanyDetails() throws NonPositiveValueException, EmailFormatException, NegativeValueException,
-            PasswordFormatException, SQLException, DateException, EmptyValueException {
-        return companiesDAO.getOneCompany(companyID);
+    public Company getCompanyDetails() {
+        return companiesRepository.findById(companyID).get();
     }
 
 }

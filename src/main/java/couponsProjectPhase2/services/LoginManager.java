@@ -1,6 +1,6 @@
 package couponsProjectPhase2.services;
 
-import beans.ClientType;
+import couponsProjectPhase2.beans.ClientType;
 import couponsProjectPhase2.exceptions.*;
 import org.springframework.stereotype.Component;
 
@@ -19,7 +19,7 @@ public class LoginManager {
         return instance;
     }
 
-    public ClientFacade login(String email, String password, ClientType clientType) throws SQLException,
+    public ClientService login(String email, String password, ClientType clientType) throws SQLException,
             EmptyValueException, NonPositiveValueException, EmailFormatException, NegativeValueException,
             PasswordFormatException, DateException, NameException, WrongEmailOrPasswordException {
         if (clientType.equals(ClientType.Administrator)) {
