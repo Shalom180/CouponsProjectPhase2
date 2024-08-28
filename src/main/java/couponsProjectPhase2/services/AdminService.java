@@ -1,5 +1,6 @@
 package couponsProjectPhase2.services;
 
+import couponsProjectPhase2.beans.Category;
 import couponsProjectPhase2.beans.Company;
 import couponsProjectPhase2.beans.Customer;
 import couponsProjectPhase2.exceptions.*;
@@ -196,8 +197,10 @@ public class AdminService extends ClientService {
     public Customer getOneCustomer(int customerId) {
         return customersRepository.findById(customerId).orElseThrow();
     }
-    
-    //todo add categories service methods
 
+    //todo add categories service methods
+    public List<Category> getCategories() {
+        return categoriesRepository.findAll();
+    }
 }
 

@@ -19,7 +19,7 @@ public class Company {
     private String name, email;
     @Column(nullable = false)
     private String password;
-    @OneToMany(mappedBy = "company")
+    @OneToMany(mappedBy = "company", fetch = FetchType.EAGER)
     private Set<Coupon> coupons;
 
     //ctors

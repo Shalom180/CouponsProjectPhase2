@@ -21,7 +21,7 @@ public class CompanyService extends ClientService {
     //ctor
 
 
-    public CompanyService(CompaniesRepository companiesRepository, CouponsRepository couponsRepository, CustomersRepository customersRepository, CategoriesRepository categoriesRepository, int companyID) {
+    public CompanyService(CompaniesRepository companiesRepository, CouponsRepository couponsRepository, CustomersRepository customersRepository, CategoriesRepository categoriesRepository) {
         super(companiesRepository, couponsRepository, customersRepository, categoriesRepository);
     }
 
@@ -94,6 +94,10 @@ public class CompanyService extends ClientService {
         if (coupon.getStartDate().after(coupon.getEndDate()))
             throw new DateException();
 
+        //we'll check if the coupons category actually exists
+        if (!categoriesRepository.existsById(coupon.getCategory().getId()))
+            throw new NonexistantObjectException();
+
         ///we cannot add a coupon with a name matching an existing coupon from the same company
         for (Coupon existing : couponsRepository.findAllByCompanyId(companyID)) {
             if (coupon.getTitle().equals(existing.getTitle()))
@@ -131,11 +135,15 @@ public class CompanyService extends ClientService {
 
     //returns all the company's coupons below a certain price
     public List<Coupon> getCompanyCoupons(double maxPrice) {
-        return couponsRepository.findAllByCompanyAndPriceBelow(maxPrice);
+        return couponsRepository.findAllByCompanyAndPriceBelow(companyID, maxPrice);
     }
 
     public Company getCompanyDetails() {
         return companiesRepository.findById(companyID).get();
+    }
+
+    public List<Category> getCategories() {
+        return categoriesRepository.findAll();
     }
 
 }

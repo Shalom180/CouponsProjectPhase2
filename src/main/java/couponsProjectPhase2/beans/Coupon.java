@@ -17,10 +17,10 @@ public class Coupon {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
     @ManyToOne
-    @Column(nullable = false)
+    @JoinColumn(nullable = false)
     private Company company;
     @ManyToOne
-    @Column(nullable = false)
+    @JoinColumn(nullable = false)
     private Category category;
     @Column(nullable = false)
     private String title, description;
@@ -30,14 +30,14 @@ public class Coupon {
     private double price;
     private String image;
     @ManyToMany(mappedBy = "coupons")
-    private Set<Customer> purchasingCustomers;
+    private Set<Customer> customers;
 
     //ctors
     public Coupon() {
     }
 
     //for adding a new item to DB (insert), the SQL DB will create the new id on its own.
-    public Coupon(Company company, Category category, String title, String description, Date startDate, Date endDate, int amount, double price, String image, Set<Customer> purchasingCustomers) {
+    public Coupon(Company company, Category category, String title, String description, Date startDate, Date endDate, int amount, double price, String image, Set<Customer> customers) {
         this.company = company;
         this.category = category;
         this.title = title;
@@ -47,7 +47,7 @@ public class Coupon {
         this.amount = amount;
         this.price = price;
         this.image = image;
-        this.purchasingCustomers = purchasingCustomers;
+        this.customers = customers;
     }
 
     //setters & getters
@@ -127,12 +127,12 @@ public class Coupon {
         this.image = image;
     }
 
-    public Set<Customer> getPurchasingCustomers() {
-        return purchasingCustomers;
+    public Set<Customer> getCustomers() {
+        return customers;
     }
 
-    public void setPurchasingCustomers(Set<Customer> purchasingCustomers) {
-        this.purchasingCustomers = purchasingCustomers;
+    public void setPurchasingCustomers(Set<Customer> customers) {
+        this.customers = customers;
     }
 
     //methods
