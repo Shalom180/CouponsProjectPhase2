@@ -13,17 +13,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 public interface CouponsRepository extends JpaRepository<Coupon, Integer> {
+    boolean existsByTitle(String title);
+
     @Query(value = "select * from coupons where end_date<?1", nativeQuery = true)
     List<Coupon> findAllCouponsExpireBefore(Date date);
 
     @Transactional
     @Modifying
-    @Query(value = "INSERT INTO `customers_coupons` (`customer_id`, `coupon_id`) VALUES (?1, ?2)", nativeQuery = true)
+    @Query(value = "INSERT INTO `customers_coupons` (`customers_id`, `coupons_id`) VALUES (?1, ?2)", nativeQuery = true)
     void addCouponPurchase(int customerId, int couponId);
 
     @Transactional
     @Modifying
-    @Query(value = "DELETE FROM customers_coupons WHERE coupon_id=?1", nativeQuery = true)
+    @Query(value = "DELETE FROM customers_coupons WHERE coupons_id=?1", nativeQuery = true)
     void deleteCouponsPurchaseHistory(int couponId);
 
     @Transactional

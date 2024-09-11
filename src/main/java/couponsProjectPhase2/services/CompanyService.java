@@ -32,8 +32,8 @@ public class CompanyService extends ClientService {
         if (company == null)
             return false;
         else {
-         companyID = company.getId();
-         return true;
+            companyID = company.getId();
+            return true;
         }
     }
 
@@ -64,16 +64,15 @@ public class CompanyService extends ClientService {
             throw new NonexistantObjectException();
 
         //we cannot add a coupon with a name matching an existing coupon from the same company
-        for (Coupon existing : couponsRepository.findAllByCompanyId(companyID)) {
-            if (coupon.getTitle().equals(existing.getTitle()))
-                throw new AlreadyExistingValueException();
-        }
+        if (couponsRepository.existsByTitle(coupon.getTitle()))
+            throw new AlreadyExistingValueException();
 
 
         couponsRepository.save(coupon);
     }
 
-    public void updateCoupon(Coupon coupon) throws UnallowedUpdateException, EmptyValueException, NegativeValueException, DateException, AlreadyExistingValueException,
+    public void updateCoupon(Coupon coupon) throws UnallowedUpdateException, EmptyValueException, NegativeValueException,
+            DateException, AlreadyExistingValueException,
             NonexistantObjectException {
         //checking for empty values
         if (coupon == null || coupon.getTitle() == null || coupon.getTitle().isEmpty() || coupon.getCompany() == null ||
@@ -99,10 +98,10 @@ public class CompanyService extends ClientService {
             throw new NonexistantObjectException();
 
         ///we cannot add a coupon with a name matching an existing coupon from the same company
-        for (Coupon existing : couponsRepository.findAllByCompanyId(companyID)) {
-            if (coupon.getTitle().equals(existing.getTitle()))
+        //we'll first check if the title was even changed and if so we'll look for matching values
+        if (!coupon.getTitle().equals(couponsRepository.findById(coupon.getId()).get().getTitle()))
+            if (couponsRepository.existsByTitle(coupon.getTitle()))
                 throw new AlreadyExistingValueException();
-        }
 
         couponsRepository.save(coupon);
     }

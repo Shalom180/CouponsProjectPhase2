@@ -18,8 +18,8 @@ import java.sql.SQLException;
 import java.util.List;
 
 @Component
-@Order(1)
-public class Test implements CommandLineRunner {
+//@Order(1)
+public class Test /*implements CommandLineRunner*/ {
     private LoginManager loginManager;
     private CouponExpirationDailyJob job;
 
@@ -28,47 +28,43 @@ public class Test implements CommandLineRunner {
         this.job = job;
     }
 
-    @Override
-    public void run(String... args) throws Exception {
+//    @Override
+//    public void run(String... args) {
+//        testAll();
+//    }
+
+    public void testAll() {
         try {
+            Thread thread = new Thread(job);
+            thread.start();
+
+
+            //ADMIN FACADE TESTS
             testAdminService();
-        } catch (WrongEmailOrPasswordException e) {
-            throw new RuntimeException(e);
+            System.out.println("TEST ADMIN FACADE DONE");
+
+            //COMPANY FACADE TESTS
+            Coupon coupon = testCompanyService();
+            System.out.println("TEST COMPANY FACADE DONE");
+
+
+            //CUSTOMER FACADE TESTS
+            testCustomerService(coupon);
+            System.out.println("TEST CUSTOMER FACADE DONE");
+
+
+            //STOP THE DAILY JOB
+            job.stop();
+
+
+        } catch (SQLException | NonPositiveValueException | EmailFormatException | NegativeValueException |
+                 PasswordFormatException | NameException | DateException | EmptyValueException |
+                 AlreadyExistingValueException | UnallowedUpdateException | CompanyIdException |
+                 NonexistantObjectException | UnavailableCouponException | AlreadyPurchasedException |
+                 WrongEmailOrPasswordException  e) {
+            System.out.println(e.getMessage());
         }
     }
-
-//    public void testAll() {
-//        try {
-//            Thread thread = new Thread(job);
-//            thread.start();
-//
-//
-//            //ADMIN FACADE TESTS
-//            testAdminService();
-//            System.out.println("TEST ADMIN FACADE DONE");
-//
-//            //COMPANY FACADE TESTS
-//            Coupon coupon = testCompanyFacade();
-//            System.out.println("TEST COMPANY FACADE DONE");
-//
-//
-//            //CUSTOMER FACADE TESTS
-//            testCustomerFacade(coupon);
-//            System.out.println("TEST CUSTOMER FACADE DONE");
-//
-//
-//            //STOP THE DAILY JOB
-//            job.stop();
-//
-//
-//        } catch (SQLException | NonPositiveValueException | EmailFormatException | NegativeValueException |
-//                 PasswordFormatException | NameException | DateException | EmptyValueException |
-//                 AlreadyExistingValueException | UnallowedUpdateException | CompanyIdException |
-//                 NonexistantObjectException | UnavailableCouponException | AlreadyPurchasedException |
-//                 WrongEmailOrPasswordException e) {
-//            System.out.println(e.getMessage());
-//        }
-//    }
 
     public void testTask() {
         Thread thread = new Thread(job);
@@ -113,58 +109,62 @@ public class Test implements CommandLineRunner {
 
     }
 
-//    public Coupon testCompanyFacade() throws NonPositiveValueException, EmailFormatException,
-//            NegativeValueException, PasswordFormatException, NameException, SQLException, DateException,
-//            EmptyValueException, CompanyIdException, AlreadyExistingValueException, UnallowedUpdateException,
-//            NonexistantObjectException, WrongEmailOrPasswordException {
-//        CompanyService companyService = (CompanyService) LoginManager.login(
-//                "johnny@johnnyandco.com", "Adhdjh1(45", ClientType.Company);
+    public Coupon testCompanyService() throws NonPositiveValueException, EmailFormatException,
+            NegativeValueException, PasswordFormatException, NameException, SQLException, DateException,
+            EmptyValueException, CompanyIdException, AlreadyExistingValueException, UnallowedUpdateException,
+            NonexistantObjectException, WrongEmailOrPasswordException {
+        CompanyService companyService = (CompanyService) loginManager.login(
+                "johnny@johnnyandco.com", "Adhdjh1(45", ClientType.Company);
+
+        Coupon johnnysCoupon1 = new Coupon(
+                companyService.getCompanyDetails(), companyService.getCategories().get(0), "Johnny's Food Coupon",
+                "This is a coupon for food.", Date.valueOf("2024-09-12"), Date.valueOf("2024-09-22"),
+                10, 19.9, null, null);
+        companyService.addCoupon(johnnysCoupon1);
+
+        Coupon johnnysCoupon2 = new Coupon(
+                companyService.getCompanyDetails(), companyService.getCategories().get(1), "Johnny's Fashion Coupon",
+                "This is a coupon for fashion.", Date.valueOf("2024-09-12"), Date.valueOf("2024-09-22"),
+                10, 50.9, null, null);
+        companyService.addCoupon(johnnysCoupon2);
+
+        johnnysCoupon1 = companyService.getCompanyCoupons().get(0); // we retrieve the coupon's id in order to update it
+        johnnysCoupon1.setDescription("This is a coupon for delicious food.");
+        companyService.updateCoupon(johnnysCoupon1);
+
+        List<Coupon> allCoupons = companyService.getCompanyCoupons();
+        System.out.println(allCoupons);
+
+        companyService.deleteCoupon(allCoupons.get(0).getId());
+
+        List<Coupon> foodCoupons = companyService.getCompanyCoupons(companyService.getCategories().get(0));
+        System.out.println(foodCoupons);
+
+        List<Coupon> cheaperThan50 = companyService.getCompanyCoupons(50);
+        System.out.println(cheaperThan50);
+
+        System.out.println(companyService.getCompanyDetails());
+        return allCoupons.get(1);
+    }
 //
-//        Coupon johnnysCoupon1 = new Coupon(
-//                companyService.getCompanyDetails(), companyService.getCategories().get(0), "Johnny's Food Coupon",
-//                "This is a coupon for food.", Date.valueOf("2024-09-12"), Date.valueOf("2024-09-22"),
-//                10, 19.9, null, null);
-//        companyService.addCoupon(johnnysCoupon1);
-//
-//        Coupon johnnysCoupon2 = new Coupon(
-//                companyService.getCompanyDetails().getId(), Category.Fashion, "Johnny's Fashion Coupon",
-//                "This is a coupon for fashion.", Date.valueOf("2024-09-12"), Date.valueOf("2024-09-22"),
-//                10, 19.9, null);
-//        companyService.addCoupon(johnnysCoupon2);
-//
-//        johnnysCoupon1 = companyService.getCompanyCoupons().get(0); // we retrieve the coupon's id in order to update it
-//        johnnysCoupon1.setDescription("This is a coupon for delicious food.");
-//        companyService.updateCoupon(johnnysCoupon1);
-//
-//        List<Coupon> allCoupons = companyService.getCompanyCoupons();
-//        companyService.deleteCoupon(allCoupons.get(0).getId());
-//
-//        List<Coupon> foodCoupons = companyService.getCompanyCoupons(Category.Food);
-//
-//        List<Coupon> cheaperThan50 = companyService.getCompanyCoupons(50);
-//
-//        companyService.getCompanyDetails();
-//        return allCoupons.get(1);
-//    }
-//
-//    public void testCustomerFacade(Coupon coupon) throws NonPositiveValueException, EmailFormatException,
-//            NegativeValueException, PasswordFormatException, NameException, SQLException, DateException,
-//            EmptyValueException, NonexistantObjectException, UnavailableCouponException, AlreadyPurchasedException,
-//            WrongEmailOrPasswordException {
-//        CustomerService customerService = (CustomerService) loginManager.login(
-//                "yali.taw@gmail.com", "@YalisPassword1", ClientType.Customer);
-//
-//
-//        customerService.purchaseCoupon(coupon);
-//
-//        List<Coupon> yalisCoupons = customerService.getCustomerCoupons();
-//
-//        List<Coupon> yalisFashionCoupons = customerService.getCustomerCoupons(Category.Fashion);
-//
-//        List<Coupon> yalisCouponsBellow50 = customerService.getCustomerCoupons(50);
-//
-//        Customer customerYali2 = customerService.getCustomerDetails();
-//    }
-//
-//
+    public void testCustomerService(Coupon coupon) throws NonPositiveValueException, EmailFormatException,
+            NegativeValueException, PasswordFormatException, NameException, SQLException, DateException,
+            EmptyValueException, NonexistantObjectException, UnavailableCouponException, AlreadyPurchasedException,
+            WrongEmailOrPasswordException {
+        CustomerService customerService = (CustomerService) loginManager.login(
+                "yali.taw@gmail.com", "@YalisPassword1", ClientType.Customer);
+
+
+        customerService.purchaseCoupon(coupon);
+
+        List<Coupon> yalisCoupons = customerService.getCustomerCoupons();
+
+        List<Coupon> yalisFashionCoupons = customerService.getCustomerCoupons(customerService.getCategories().get(1));
+
+        List<Coupon> yalisCouponsBellow50 = customerService.getCustomerCoupons(50);
+
+        Customer customerYali2 = customerService.getCustomerDetails();
+    }
+
+
 }
