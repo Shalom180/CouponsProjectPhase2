@@ -124,7 +124,7 @@ public class Test /*implements CommandLineRunner*/ {
 
         Coupon johnnysCoupon2 = new Coupon(
                 companyService.getCompanyDetails(), companyService.getCategories().get(1), "Johnny's Fashion Coupon",
-                "This is a coupon for fashion.", Date.valueOf("2024-09-12"), Date.valueOf("2024-09-22"),
+                "This is a coupon for fashion.", Date.valueOf("2024-09-12"), Date.valueOf("2024-11-22"),
                 10, 50.9, null, null);
         companyService.addCoupon(johnnysCoupon2);
 

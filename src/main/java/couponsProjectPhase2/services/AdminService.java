@@ -32,6 +32,7 @@ public class AdminService extends ClientService {
 
     public void addCompany(Company company) throws EmailFormatException, PasswordFormatException, EmptyValueException,
             AlreadyExistingValueException, UnallowedUpdateException {
+
         //we'll check whether we've got an empty value which isn't allowed to be empty
         if (company == null || company.getName() == null || company.getName().isEmpty() || company.getPassword() == null
                 || company.getPassword().isEmpty() || company.getEmail() == null || company.getEmail().isEmpty())
@@ -62,7 +63,9 @@ public class AdminService extends ClientService {
             throw new EmptyValueException();
 
         //we cannot update a nonexistant company - we'll check if this company actually exists
-        if (!companiesRepository.existsById(company.getId()))
+        Company companyInDB = companiesRepository.findById(company.getId()).orElse(null);
+
+        if (companyInDB == null)
             throw new NonexistantObjectException();
 
         //we'll check whether we've got an empty value which isn't allowed to be empty
@@ -80,13 +83,16 @@ public class AdminService extends ClientService {
         //we cannot update to an email that already exists in the db -
         // we'll check first if the user is actually trying to change the company's email and then well look
         // for matching values
-        if (!company.getEmail().equals(companiesRepository.findById(company.getId()).get().getEmail()) &&
+        if (!company.getEmail().equals(companyInDB.getEmail()) &&
                 companiesRepository.existsByEmail(company.getEmail()))
             throw new AlreadyExistingValueException();
 
         //we are not allowed to update name
-        if (!companiesRepository.findById(company.getId()).get().getName().equals(company.getName()))
+        if (!companyInDB.getName().equals(company.getName()))
             throw new UnallowedUpdateException();
+
+        //we cannot update a company while adding it new coupons - we'll reset its coupons list
+        company.setCoupons(null);
 
         companiesRepository.save(company);
 

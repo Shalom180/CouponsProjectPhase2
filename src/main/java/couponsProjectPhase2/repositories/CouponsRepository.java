@@ -41,15 +41,15 @@ public interface CouponsRepository extends JpaRepository<Coupon, Integer> {
     @Query(value = "SELECT * FROM coupons WHERE company_id=?1 AND price<?2", nativeQuery = true)
     List<Coupon> findAllByCompanyAndPriceBelow(int company_id, double maxPrice);
 
-    @Query(value = "SELECT * FROM coupons c RIGHT JOIN customers_coupons cc ON c.id=cc.coupon_id WHERE cc.customer_id=?1",
+    @Query(value = "SELECT * FROM coupons c RIGHT JOIN customers_coupons cc ON c.id=cc.coupons_id WHERE cc.customers_id=?1",
             nativeQuery = true)
     List<Coupon> findAllByCustomerId(int customerID);
 
-    @Query(value = "SELECT * FROM coupons c RIGHT JOIN customers_coupons cc ON c.id=cc.coupon_id WHERE cc.customer_id=?1 " +
+    @Query(value = "SELECT * FROM coupons c RIGHT JOIN customers_coupons cc ON c.id=cc.coupons_id WHERE cc.customers_id=?1 " +
             "AND c.category_id=?2", nativeQuery = true)
     List<Coupon> findAllByCustomerIdAndCategoryId(int customerID, int categoryId);
 
-    @Query(value = "SELECT * FROM coupons c RIGHT JOIN customers_coupons cc ON c.id=cc.coupon_id WHERE cc.customer_id=?1 " +
+    @Query(value = "SELECT * FROM coupons c RIGHT JOIN customers_coupons cc ON c.id=cc.coupons_id WHERE cc.customers_id=?1 " +
             "AND c.price<?2", nativeQuery = true)
     List<Coupon> findAllByCustomerIdAndPriceBelow(int customerID, double maxPrice);
 

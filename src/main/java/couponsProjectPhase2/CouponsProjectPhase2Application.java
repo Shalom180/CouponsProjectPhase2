@@ -12,7 +12,7 @@ import org.springframework.context.ApplicationContext;
 @SpringBootApplication
 public class CouponsProjectPhase2Application {
 
-	public static void ma(String[] args) {
+	public static void man(String[] args) {
 		ApplicationContext context =SpringApplication.run(CouponsProjectPhase2Application.class, args);
 		DBFactory dbFactory = context.getBean(DBFactory.class);
         try {

@@ -67,6 +67,10 @@ public class Company {
         return coupons;
     }
 
+    public void setCoupons(Set<Coupon> coupons) {
+        this.coupons = coupons;
+    }
+
     //methods
     @Override
     public String toString() {

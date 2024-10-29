@@ -27,7 +27,7 @@ public class LoginManager {
             return companyService;
 
         else if (clientType.equals(ClientType.Customer) && customerService.login(email, password))
-            return companyService;
+            return customerService;
 
         throw new WrongEmailOrPasswordException();
     }
